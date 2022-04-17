@@ -30,3 +30,11 @@ mkdir build && cd build
 cmake ..
 make -j$(nproc)
 ```
+
+## Donations
+
+If you'd like to support further development of this software, you're welcome to send any amount of XMR to the following address:
+
+```
+44MnN1f3Eto8DZYUWuE5XZNUtE3vcRzt2j6PzqWpPau34e6Cf4fAxt6X2MBmrm6F9YMEiMNjN6W4Shn4pLcfNAja621jwyg
+```
