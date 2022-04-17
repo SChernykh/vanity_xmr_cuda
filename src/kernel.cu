@@ -21,6 +21,7 @@
 #include <random>
 #include <chrono>
 #include <thread>
+#include <atomic>
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "keccak.h"
