@@ -5,7 +5,7 @@ Usage:
 ./vanity_xmr_cuda [-i] pattern1 [pattern_2] [pattern_3] ... [pattern_n]
 ```
 
-`-i` makes the search case insensitive. Each pattern can have `?` symbols which match any character.
+`-i` makes the search case insensitive. You can't use capital letters in patterns in `-i` mode. Each pattern can have `?` symbols which match any character.
 
 Example:
 ```

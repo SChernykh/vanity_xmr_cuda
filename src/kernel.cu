@@ -38,6 +38,8 @@ extern "C" {
 using namespace std::chrono;
 
 constexpr char alphabet[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+constexpr char alphabet_nocase[] = "123456789abcdefghjklmnpqrstuvwxyzabcdefghijkmnopqrstuvwxyz";
+
 constexpr size_t BATCH_SIZE = 1 << 20;
 
 int main(int argc, char** argv)
@@ -62,6 +64,8 @@ int main(int argc, char** argv)
             }
         }
 
+        const char* abc = case_sensitive ? alphabet : alphabet_nocase;
+
         bool good = true;
         for (int j = 0; j < PATTERN_SIZE; ++j) {
             if (s[j] == '?') {
@@ -69,7 +73,7 @@ int main(int argc, char** argv)
             }
             bool found = false;
             for (int k = 0; k < 58; ++k) {
-                if (s[j] == alphabet[k]) {
+                if (s[j] == abc[k]) {
                     found = true;
                     break;
                 }
@@ -91,7 +95,7 @@ int main(int argc, char** argv)
         printf(
             "Usage:\n\n"
             "./vanity_xmr_cuda [-i] pattern1 [pattern_2] [pattern_3] ... [pattern_n]\n\n"
-            "-i         case insensitive search\n\n"
+            "-i         case insensitive search (you can't use capital letters in patterns in this mode)\n\n"
             "Each pattern can have \"?\" symbols which match any character\n\n"
             "Example:\n\t./vanity_xmr_cuda -i 4?xxxxx 433333 455555 477777 499999\n\n"
             "If the vanity generator finds a match, it will print the spend secret key and the resulting Monero address.\n"
