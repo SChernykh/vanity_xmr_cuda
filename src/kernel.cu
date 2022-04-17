@@ -136,6 +136,10 @@ int main(int argc, char** argv)
             uint8_t tmp_buf[sizeof(rnd_buf)];
             memcpy(tmp_buf, rnd_buf, sizeof(rnd_buf));
 
+            // Mix in thread number
+            tmp_buf[0] ^= i;
+
+            // Mix all bits of the random buffer into the key template
             uint8_t key_template[32];
             keccak(tmp_buf, sizeof(tmp_buf), key_template, sizeof(key_template), 24);
 
