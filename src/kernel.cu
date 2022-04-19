@@ -262,7 +262,7 @@ int main(int argc, char** argv)
         const auto t2 = high_resolution_clock::now();
 
         const double dt = duration_cast<nanoseconds>(t2 - t1).count() * 1e-9;
-        std::cout << (cur_keys_checked - prev_keys_checked) / dt * 1e-6 << " million keys/second" << std::endl;
+        printf("%.3f million keys/second\r", (cur_keys_checked - prev_keys_checked) / dt * 1e-6);
 
         t1 = t2;
         prev_keys_checked = cur_keys_checked;
