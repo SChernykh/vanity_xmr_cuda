@@ -22,6 +22,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <set>
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "keccak.h"
@@ -44,14 +45,39 @@ constexpr size_t BATCH_SIZE = 1 << 20;
 
 int main(int argc, char** argv)
 {
+#define CHECKED_CALL(X) do { \
+        const cudaError_t err = X; \
+        if (err != cudaSuccess) { \
+            std::cerr << #X " (line " << __LINE__ << ") failed, error " << err; \
+            return __LINE__; \
+        } \
+    } while(0)
+
+    int device_count;
+    CHECKED_CALL(cudaGetDeviceCount(&device_count));
+
     std::string patterns_str;
     bool case_sensitive = true;
+
+    std::set<int> devices_to_use;
 
     for (int i = 1; i < argc; ++i) {
         std::string s = argv[i];
 
         if (s == "-i") {
             case_sensitive = false;
+            continue;
+        }
+
+        if ((s == "-d") && (i + 1 < argc)) {
+            ++i;
+            const int id = strtol(argv[i], nullptr, 10);
+            if (0 <= id && id < device_count) {
+                devices_to_use.insert(id);
+            }
+            else {
+                printf("Invalid device id %s\n", argv[i]);
+            }
             continue;
         }
 
@@ -94,8 +120,9 @@ int main(int argc, char** argv)
     if (patterns_str.empty()) {
         printf(
             "Usage:\n\n"
-            "./vanity_xmr_cuda [-i] pattern1 [pattern_2] [pattern_3] ... [pattern_n]\n\n"
-            "-i         case insensitive search (you can't use capital letters in patterns in this mode)\n\n"
+            "./vanity_xmr_cuda [-i] [-d N] pattern1 [pattern_2] [pattern_3] ... [pattern_n]\n\n"
+            "-i         case insensitive search (you can't use capital letters in patterns in this mode)\n"
+            "-d N       use CUDA device with index N (counting from 0). This argument can be repeated multiple times with different N.\n\n"
             "Each pattern can have \"?\" symbols which match any character\n\n"
             "Example:\n\t./vanity_xmr_cuda -i 4?xxxxx 433333 455555 477777 499999\n\n"
             "If the vanity generator finds a match, it will print the spend secret key and the resulting Monero address.\n"
@@ -104,17 +131,6 @@ int main(int argc, char** argv)
         );
         return 0;
     }
-
-#define CHECKED_CALL(X) do { \
-        const cudaError_t err = X; \
-        if (err != cudaSuccess) { \
-            std::cerr << #X " (line " << __LINE__ << ") failed, error " << err; \
-            return __LINE__; \
-        } \
-    } while(0)
-
-    int device_count;
-    CHECKED_CALL(cudaGetDeviceCount(&device_count));
 
     // Get some entropy from the random device
     std::random_device::result_type rnd_buf[256];
@@ -127,13 +143,17 @@ int main(int argc, char** argv)
     std::vector<std::thread> threads;
 
     for (int i = 0; i < device_count; ++i) {
+        if (!devices_to_use.empty() && (devices_to_use.find(i) == devices_to_use.end())) {
+            continue;
+        }
+
+        cudaDeviceProp prop;
+        CHECKED_CALL(cudaGetDeviceProperties(&prop, i));
+        printf("Using CUDA device %d: %s\n", i, prop.name);
+
         threads.emplace_back([i, case_sensitive, &rnd_buf, &patterns_str, &keys_checked]()
         {
             CHECKED_CALL(cudaSetDevice(i));
-
-            cudaDeviceProp prop;
-            CHECKED_CALL(cudaGetDeviceProperties(&prop, i));
-            printf("Thread %d: running on %s\n", i, prop.name);
 
             CHECKED_CALL(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
 
