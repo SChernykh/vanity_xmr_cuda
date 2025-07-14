@@ -31,6 +31,37 @@ cmake ..
 make -j$(nproc)
 ```
 
+### CUDA Docker Image
+
+#### Build Image
+
+```shell
+docker build -f Dockerfile -t vanity-xmr-cuda:latest .
+```
+
+The CUDA version from the base image must work with the driver available through
+the `container-toolkit`, so YMMV with the `Dockerfile` default versions of the
+images. so you can specify different versions with Docker's `--build-arg` on:
+
+- `BASE_CUDA_DEV_CONTAINER`
+- `BASE_CUDA_RUN_CONTAINER`
+
+### Running with [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html)
+
+You can use more or less of my example below, but it's my preference. `--gpus
+all` is of course mandatory for CUDA support.
+
+```shell
+docker run -it --rm --name vanity --network none --gpus all vanity-xmr-cuda:latest 49
+```
+
+**NOTE:** I can't seem to get it to respond to `^C` even with `-it`, so you may
+have to kill it via:
+
+```shell
+docker rm -f vanity
+```
+
 ## Donations
 
 If you'd like to support further development of this software, you're welcome to send any amount of XMR to the following address:
